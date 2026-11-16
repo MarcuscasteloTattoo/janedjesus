@@ -104,15 +104,31 @@
   }
 
   // ===== Carrossel do topo =====
+  // A 1ª foto carrega com a página; a 2ª e a 3ª só depois que tudo terminou de carregar.
   function initHero() {
     const slides = [...document.querySelectorAll(".hero__slides img")];
     if (slides.length < 2) return;
+    const loadDeferred = () => {
+      document.querySelectorAll(".hero__slides [data-srcset]").forEach(el => { el.srcset = el.dataset.srcset; el.removeAttribute("data-srcset"); });
+      document.querySelectorAll(".hero__slides img[data-src]").forEach(el => { el.src = el.dataset.src; el.removeAttribute("data-src"); });
+    };
     let i = 0;
-    setInterval(() => {
-      slides[i].classList.remove("is-active");
-      i = (i + 1) % slides.length;
-      slides[i].classList.add("is-active");
-    }, 5000);
+    afterLoad(() => {
+      loadDeferred();
+      setInterval(() => {
+        const next = slides[(i + 1) % slides.length];
+        if (!next.complete || !next.naturalWidth) return; // espera a próxima foto carregar
+        slides[i].classList.remove("is-active");
+        i = (i + 1) % slides.length;
+        slides[i].classList.add("is-active");
+      }, 5000);
+    });
+  }
+
+  // Roda depois do carregamento completo da página, quando o navegador estiver livre.
+  function afterLoad(fn) {
+    const run = () => ("requestIdleCallback" in window ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 200));
+    if (document.readyState === "complete") run(); else window.addEventListener("load", run, { once: true });
   }
 
   // ===== FAQ (um aberto por vez) =====
@@ -222,7 +238,7 @@
   }
 
   captureUtms();
-  initPixel();
+  afterLoad(initPixel);  // Pixel fora do caminho crítico
   initHero();
   initFaq();
   initForm();

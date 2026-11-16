@@ -12,11 +12,367 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://janedjesus.com.br/">
   <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-  <link rel="preload" as="image" href="images/carousel-jane-1.jpg" fetchpriority="high">
+  <link rel="preload" as="image" type="image/avif" imagesrcset="images/carousel-jane-1-480.avif 480w, images/carousel-jane-1-800.avif 800w, images/carousel-jane-1-1200.avif 1200w, images/carousel-jane-1-1440.avif 1440w" imagesizes="100vw" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600;700&display=swap">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Source+Sans+3:wght@300;400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Source+Sans+3:wght@300;400;600&display=swap"></noscript>
+  <style>
+    :root {
+      --background: oklch(98.5% .004 20);
+      --blush: oklch(96.5% .009 350);
+      --muted: oklch(95.5% .008 350);
+      --secondary: oklch(93% .016 350);
+      --border: oklch(89% .014 350);
+      --input: oklch(88% .014 350);
+      --foreground: oklch(24% .015 340);
+      --muted-foreground: oklch(52% .02 345);
+      --ink: oklch(19% .012 340);
+      --rose-deep: oklch(44% .068 355);
+      --destructive: oklch(55% .16 25);
+
+      --font-display: "Lora", Georgia, serif;
+      --font-sans: "Source Sans 3", system-ui, sans-serif;
+      --tracking: .16em;
+      --veil: linear-gradient(to top, oklch(19% .012 340 / .72), oklch(19% .012 340 / .12) 55%, oklch(19% .012 340 / .35));
+      --shadow: 0 30px 60px -30px oklch(44% .068 355 / .28);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--foreground);
+      background: var(--background);
+      -webkit-font-smoothing: antialiased;
+    }
+    main { overflow-x: hidden; }
+    img { display: block; max-width: 100%; height: auto; }
+    picture { display: contents; }
+    h1, h2, h3 { font-family: var(--font-display); font-weight: 500; text-wrap: balance; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; background: none; border: 0; }
+    a { color: inherit; text-decoration: none; }
+    ol { list-style: none; }
+
+    .eyebrow {
+      display: block;
+      font-family: var(--font-sans);
+      font-size: .8125rem;
+      font-weight: 600;
+      line-height: 1.35rem;
+      letter-spacing: var(--tracking);
+      text-transform: uppercase;
+      color: var(--rose-deep);
+    }
+
+    h2 {
+      font-size: 1.65rem;
+      line-height: 1.25;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .section { padding: 6rem 1.5rem; }
+    .bg-light { background: var(--background); }
+    .bg-blush { background: var(--blush); }
+
+    .section__head { max-width: 48rem; margin: 0 auto; text-align: center; }
+    .section__head h2 { margin-top: 1.25rem; }
+    .section__intro {
+      max-width: 42rem;
+      margin: 1.75rem auto 0;
+      text-align: center;
+      line-height: 1.625;
+      color: var(--muted-foreground);
+    }
+
+    .hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100svh;
+      padding: 5rem 1.5rem;
+      overflow: hidden;
+      background: var(--ink);
+      text-align: center;
+      color: var(--background);
+    }
+    .hero__slides img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1600ms ease-in-out;
+    }
+    .hero__slides img.is-active { opacity: 1; }
+
+    .veil { position: absolute; inset: 0; background-image: var(--veil); }
+
+    .hero__content { position: relative; z-index: 1; }
+    .brand {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      letter-spacing: .32em;
+    }
+    .brand-sub {
+      margin-top: .75rem;
+      font-size: .75rem;
+      letter-spacing: var(--tracking);
+      opacity: .7;
+    }
+    .rule {
+      display: block;
+      width: 3.5rem;
+      height: 1px;
+      margin: 2.5rem auto 0;
+      background: color-mix(in oklab, var(--background) 40%, transparent);
+    }
+    .hero h1 {
+      max-width: 48rem;
+      margin: 2.5rem auto 0;
+      font-size: 2rem;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+    .hero__lead {
+      max-width: 36rem;
+      margin: 1.75rem auto 0;
+      font-weight: 300;
+      line-height: 1.625;
+      opacity: .8;
+    }
+    .hero__tag {
+      margin-top: 2.25rem;
+      font-size: .75rem;
+      letter-spacing: var(--tracking);
+      text-transform: uppercase;
+      opacity: .6;
+    }
+    .hero__scroll {
+      position: relative;
+      z-index: 1;
+      margin-top: 4rem;
+      font-size: .75rem;
+      letter-spacing: var(--tracking);
+      text-transform: uppercase;
+      opacity: .8;
+      transition: opacity .2s;
+    }
+    .hero__scroll:hover { opacity: 1; }
+    .hero__scroll span { display: inline-block; animation: soft-bounce 2.4s ease-in-out infinite; }
+
+    .fade-up { animation: fade-up 1s cubic-bezier(.22,.8,.2,1) both; }
+    @keyframes fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    @keyframes soft-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+    .portfolio {
+      display: grid;
+      gap: 1.5rem;
+      max-width: 64rem;
+      margin: 4rem auto 0;
+    }
+    .portfolio figure { overflow: hidden; background: var(--muted); aspect-ratio: 4 / 5; }
+    .portfolio img {
+      width: 100%;
+      height: 100% !important;
+      object-fit: cover;
+      transition: transform 1200ms cubic-bezier(0,0,.2,1);
+    }
+    .portfolio img:hover { transform: scale(1.04); }
+
+    .cards {
+      display: grid;
+      gap: 2.5rem;
+      max-width: 64rem;
+      margin: 4rem auto 0;
+    }
+    .card__img { overflow: hidden; background: var(--secondary); }
+    .card__img img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+    .card h3 {
+      margin-top: 1.5rem;
+      font-size: .8125rem;
+      letter-spacing: var(--tracking);
+      text-transform: uppercase;
+      color: var(--rose-deep);
+    }
+    .card p { margin-top: .75rem; line-height: 1.625; color: var(--muted-foreground); }
+
+    .artist {
+      display: grid;
+      align-items: center;
+      gap: 3rem;
+      max-width: 64rem;
+      margin: 0 auto;
+    }
+    .artist__img { overflow: hidden; background: var(--secondary); }
+    .artist__img img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+    .artist__text h2 { margin-top: 1.25rem; font-size: 1.6rem; }
+    .artist__text p { margin-top: 1rem; line-height: 1.625; color: var(--muted-foreground); }
+    .artist__text h2 + p { margin-top: 1.75rem; }
+    .artist__text .artist__quote {
+      margin-top: 2rem;
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-style: italic;
+      color: var(--rose-deep);
+    }
+
+    .steps { max-width: 42rem; margin: 4rem auto 0; }
+    .steps li { display: flex; gap: 1.5rem; padding: 2rem 0; border-top: 1px solid var(--border); }
+    .steps li:last-child { border-bottom: 1px solid var(--border); }
+    .steps__num {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      line-height: 1.3;
+      color: var(--rose-deep);
+    }
+    .steps h3 {
+      font-size: .8125rem;
+      letter-spacing: var(--tracking);
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    .steps p { margin-top: .75rem; line-height: 1.625; color: var(--muted-foreground); }
+
+    .faq { max-width: 42rem; margin: 3.5rem auto 0; }
+    .faq__item { border-top: 1px solid var(--border); }
+    .faq__item:last-child { border-bottom: 1px solid var(--border); }
+    .faq__item button {
+      display: flex;
+      width: 100%;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 1.5rem 0;
+      text-align: left;
+      font-family: var(--font-display);
+      color: var(--ink);
+    }
+    .faq__icon {
+      margin-top: .25rem;
+      font-family: var(--font-sans);
+      color: var(--rose-deep);
+      transition: transform .3s;
+    }
+    .faq__panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      overflow: hidden;
+      transition: grid-template-rows .5s cubic-bezier(0,0,.2,1), opacity .5s cubic-bezier(0,0,.2,1);
+    }
+    .faq__panel p { overflow: hidden; padding-bottom: 0; line-height: 1.625; color: var(--muted-foreground); }
+    .faq__item.is-open .faq__panel { grid-template-rows: 1fr; opacity: 1; }
+    .faq__item.is-open .faq__panel p { padding-bottom: 1.5rem; }
+    .faq__item.is-open .faq__icon { transform: rotate(45deg); }
+
+    .memory {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 70svh;
+      padding: 7rem 1.5rem;
+      overflow: hidden;
+      background: var(--ink);
+      text-align: center;
+      color: var(--background);
+    }
+    .memory img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .memory__content { position: relative; z-index: 1; max-width: 42rem; margin: 0 auto; }
+    .memory h2 { font-size: 1.6rem; color: var(--background); }
+    .memory p { margin-top: 1.75rem; line-height: 1.625; opacity: .8; }
+
+    .lead-form { max-width: 36rem; margin: 3.5rem auto 0; }
+    .lead-form__grid { display: grid; gap: 1.75rem; }
+    .lead-form label { display: block; }
+    .lead-form input,
+    .lead-form select,
+    .lead-form textarea {
+      width: 100%;
+      padding: .75rem 0;
+      border: 0;
+      border-bottom: 1px solid var(--input);
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .lead-form select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23866f7a' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 2px center;
+      padding-right: 1.5rem;
+    }
+    .lead-form select:invalid { color: color-mix(in oklab, var(--muted-foreground) 70%, transparent); }
+    .lead-form textarea { resize: vertical; }
+    .lead-form ::placeholder { color: color-mix(in oklab, var(--muted-foreground) 70%, transparent); }
+    .lead-form input:focus,
+    .lead-form select:focus,
+    .lead-form textarea:focus { border-color: var(--rose-deep); }
+
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    .lead-form__error { margin-top: 2rem; text-align: center; font-size: .75rem; color: var(--destructive); }
+
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 3rem;
+      padding: 1.25rem 2rem;
+      background: var(--rose-deep);
+      color: var(--background);
+      font-size: .75rem;
+      letter-spacing: var(--tracking);
+      text-transform: uppercase;
+      transition: background-color .2s;
+    }
+    .btn:hover { background: var(--ink); }
+
+    .footer { padding: 3rem 1.5rem; background: var(--ink); text-align: center; color: var(--background); }
+    .footer__brand { font-family: var(--font-display); font-size: 1.125rem; letter-spacing: .3em; text-transform: uppercase; }
+    .footer__sub { margin-top: .5rem; font-size: .75rem; letter-spacing: var(--tracking); opacity: .6; }
+
+    @media (min-width: 640px) {
+      .section { padding: 8rem 1.5rem; }
+      h2 { font-size: 2.25rem; }
+      .section__intro { font-size: 1.125rem; }
+      .brand { font-size: 1.875rem; }
+      .hero h1 { font-size: 3rem; }
+      .hero__lead { font-size: 1.125rem; }
+      .portfolio { grid-template-columns: repeat(2, 1fr); }
+      .portfolio__wide { grid-column: span 2; aspect-ratio: 8 / 5 !important; }
+      .artist__text h2 { font-size: 2.1rem; }
+      .faq__item button { font-size: 1.125rem; }
+      .memory h2 { font-size: 2.25rem; }
+      .memory p { font-size: 1.125rem; }
+      .lead-form__grid { grid-template-columns: repeat(2, 1fr); }
+      .lead-form__full { grid-column: 1 / -1; }
+    }
+    @media (min-width: 768px) {
+      .cards { grid-template-columns: repeat(3, 1fr); }
+      .artist { grid-template-columns: 1fr 1fr; gap: 4rem; }
+    }
+    @media (min-width: 1024px) {
+      .hero h1 { font-size: 3.75rem; }
+      .portfolio { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
 </head>
 <body>
 <main>
@@ -24,9 +380,9 @@
   <!-- HERO -->
   <section class="hero" id="inicio">
     <div class="hero__slides">
-      <img class="is-active" src="images/carousel-jane-1.jpg" alt="Cachorro ao lado de seu retrato realista tatuado no antebraço" width="1440" height="1920" fetchpriority="high">
-      <img src="images/carousel-jane-2.jpg" alt="Cachorra ao lado de seu retrato realista tatuado no braço" width="1440" height="1920" loading="lazy">
-      <img src="images/carousel-jane-3.jpg" alt="Cachorra ao lado de seu retrato realista tatuado no antebraço" width="1440" height="1920" loading="lazy">
+      <picture><source type="image/avif" srcset="images/carousel-jane-1-480.avif 480w, images/carousel-jane-1-800.avif 800w, images/carousel-jane-1-1200.avif 1200w, images/carousel-jane-1-1440.avif 1440w" sizes="100vw"><source type="image/webp" srcset="images/carousel-jane-1-480.webp 480w, images/carousel-jane-1-800.webp 800w, images/carousel-jane-1-1200.webp 1200w, images/carousel-jane-1-1440.webp 1440w" sizes="100vw"><img src="images/carousel-jane-1.jpg" class="is-active" alt="Cachorro ao lado de seu retrato realista tatuado no antebraço" fetchpriority="high" width="1440" height="1920" decoding="async"></picture>
+      <picture><source type="image/avif" data-srcset="images/carousel-jane-2-480.avif 480w, images/carousel-jane-2-800.avif 800w, images/carousel-jane-2-1200.avif 1200w, images/carousel-jane-2-1440.avif 1440w" sizes="100vw"><source type="image/webp" data-srcset="images/carousel-jane-2-480.webp 480w, images/carousel-jane-2-800.webp 800w, images/carousel-jane-2-1200.webp 1200w, images/carousel-jane-2-1440.webp 1440w" sizes="100vw"><img data-src="images/carousel-jane-2.jpg" alt="Cachorra ao lado de seu retrato realista tatuado no braço" width="1440" height="1920" decoding="async"></picture>
+      <picture><source type="image/avif" data-srcset="images/carousel-jane-3-480.avif 480w, images/carousel-jane-3-800.avif 800w, images/carousel-jane-3-1200.avif 1200w, images/carousel-jane-3-1440.avif 1440w" sizes="100vw"><source type="image/webp" data-srcset="images/carousel-jane-3-480.webp 480w, images/carousel-jane-3-800.webp 800w, images/carousel-jane-3-1200.webp 1200w, images/carousel-jane-3-1440.webp 1440w" sizes="100vw"><img data-src="images/carousel-jane-3.jpg" alt="Cachorra ao lado de seu retrato realista tatuado no antebraço" width="1440" height="1920" decoding="async"></picture>
     </div>
     <div class="veil"></div>
     <div class="hero__content fade-up">
@@ -48,11 +404,11 @@
     </header>
     <p class="section__intro">Cada tatuagem nasce de uma história diferente. O objetivo é preservar em cada detalhe aquilo que torna aquele Pet único.</p>
     <div class="portfolio">
-      <figure class="portfolio__wide"><img src="images/portfolio-jane-1.jpg" alt="Tatuagem colorida de dois cachorros ao lado dos pets retratados" loading="lazy"></figure>
-      <figure><img src="images/portfolio-jane-2.jpg" alt="Tatuagem de três cachorros com flores ao lado dos pets retratados" loading="lazy"></figure>
-      <figure><img src="images/portfolio-jane-3.jpg" alt="Tatuagem de dois pugs com flores ao lado dos pets retratados" loading="lazy"></figure>
-      <figure><img src="images/portfolio-jane-4.jpg" alt="Tatuagem de dois gatos com flores ao lado dos pets retratados" loading="lazy"></figure>
-      <figure><img src="images/portfolio-jane-5.jpg" alt="Tatuagem realista de gato siamês ao lado do pet retratado" loading="lazy"></figure>
+      <figure class="portfolio__wide"><picture><source type="image/avif" srcset="images/portfolio-jane-1-480.avif 480w, images/portfolio-jane-1-800.avif 800w, images/portfolio-jane-1-1200.avif 1200w" sizes="(min-width: 1024px) 683px, 100vw"><source type="image/webp" srcset="images/portfolio-jane-1-480.webp 480w, images/portfolio-jane-1-800.webp 800w, images/portfolio-jane-1-1200.webp 1200w" sizes="(min-width: 1024px) 683px, 100vw"><img src="images/portfolio-jane-1.jpg" alt="Tatuagem colorida de dois cachorros ao lado dos pets retratados" width="1440" height="1920" decoding="async" loading="lazy"></picture></figure>
+      <figure><picture><source type="image/avif" srcset="images/portfolio-jane-2-480.avif 480w, images/portfolio-jane-2-800.avif 800w, images/portfolio-jane-2-1200.avif 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><source type="image/webp" srcset="images/portfolio-jane-2-480.webp 480w, images/portfolio-jane-2-800.webp 800w, images/portfolio-jane-2-1200.webp 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><img src="images/portfolio-jane-2.jpg" alt="Tatuagem de três cachorros com flores ao lado dos pets retratados" width="1440" height="1920" decoding="async" loading="lazy"></picture></figure>
+      <figure><picture><source type="image/avif" srcset="images/portfolio-jane-3-480.avif 480w, images/portfolio-jane-3-800.avif 800w, images/portfolio-jane-3-1200.avif 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><source type="image/webp" srcset="images/portfolio-jane-3-480.webp 480w, images/portfolio-jane-3-800.webp 800w, images/portfolio-jane-3-1200.webp 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><img src="images/portfolio-jane-3.jpg" alt="Tatuagem de dois pugs com flores ao lado dos pets retratados" width="1440" height="1920" decoding="async" loading="lazy"></picture></figure>
+      <figure><picture><source type="image/avif" srcset="images/portfolio-jane-4-480.avif 480w, images/portfolio-jane-4-800.avif 800w, images/portfolio-jane-4-1200.avif 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><source type="image/webp" srcset="images/portfolio-jane-4-480.webp 480w, images/portfolio-jane-4-800.webp 800w, images/portfolio-jane-4-1200.webp 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><img src="images/portfolio-jane-4.jpg" alt="Tatuagem de dois gatos com flores ao lado dos pets retratados" width="1440" height="1920" decoding="async" loading="lazy"></picture></figure>
+      <figure><picture><source type="image/avif" srcset="images/portfolio-jane-5-480.avif 480w, images/portfolio-jane-5-800.avif 800w, images/portfolio-jane-5-1200.avif 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><source type="image/webp" srcset="images/portfolio-jane-5-480.webp 480w, images/portfolio-jane-5-800.webp 800w, images/portfolio-jane-5-1200.webp 1200w" sizes="(min-width: 1024px) 331px, (min-width: 640px) 50vw, 100vw"><img src="images/portfolio-jane-5.jpg" alt="Tatuagem realista de gato siamês ao lado do pet retratado" width="1440" height="1920" decoding="async" loading="lazy"></picture></figure>
     </div>
   </section>
 
@@ -64,17 +420,17 @@
     </header>
     <div class="cards">
       <article class="card">
-        <div class="card__img"><img src="images/especializacao-caes.jpg" alt="Tatuagem realista — Cães" loading="lazy"></div>
+        <div class="card__img"><picture><source type="image/avif" srcset="images/especializacao-caes-480.avif 480w, images/especializacao-caes-800.avif 800w, images/especializacao-caes-1200.avif 1200w" sizes="(min-width: 1024px) 315px, (min-width: 768px) 31vw, 100vw"><source type="image/webp" srcset="images/especializacao-caes-480.webp 480w, images/especializacao-caes-800.webp 800w, images/especializacao-caes-1200.webp 1200w" sizes="(min-width: 1024px) 315px, (min-width: 768px) 31vw, 100vw"><img src="images/especializacao-caes.jpg" alt="Tatuagem realista — Cães" width="1440" height="1920" decoding="async" loading="lazy"></picture></div>
         <h3>Cães</h3>
         <p>Retratos realistas que preservam a expressão, o olhar e a personalidade do seu companheiro.</p>
       </article>
       <article class="card">
-        <div class="card__img"><img src="images/portfolio-jane-5.jpg" alt="Tatuagem realista — Gatos" loading="lazy"></div>
+        <div class="card__img"><picture><source type="image/avif" srcset="images/portfolio-jane-5-480.avif 480w, images/portfolio-jane-5-800.avif 800w, images/portfolio-jane-5-1200.avif 1200w" sizes="(min-width: 1024px) 315px, (min-width: 768px) 31vw, 100vw"><source type="image/webp" srcset="images/portfolio-jane-5-480.webp 480w, images/portfolio-jane-5-800.webp 800w, images/portfolio-jane-5-1200.webp 1200w" sizes="(min-width: 1024px) 315px, (min-width: 768px) 31vw, 100vw"><img src="images/portfolio-jane-5.jpg" alt="Tatuagem realista — Gatos" width="1440" height="1920" decoding="async" loading="lazy"></picture></div>
         <h3>Gatos</h3>
         <p>Detalhes, textura e expressão trabalhados para transformar seu gato em uma obra de arte única.</p>
       </article>
       <article class="card">
-        <div class="card__img"><img src="images/especializacao-outros-pets.jpg" alt="Tatuagem realista — Outros Pets" loading="lazy"></div>
+        <div class="card__img"><picture><source type="image/avif" srcset="images/especializacao-outros-pets-480.avif 480w, images/especializacao-outros-pets-800.avif 800w, images/especializacao-outros-pets-1200.avif 1200w" sizes="(min-width: 1024px) 315px, (min-width: 768px) 31vw, 100vw"><source type="image/webp" srcset="images/especializacao-outros-pets-480.webp 480w, images/especializacao-outros-pets-800.webp 800w, images/especializacao-outros-pets-1200.webp 1200w" sizes="(min-width: 1024px) 315px, (min-width: 768px) 31vw, 100vw"><img src="images/especializacao-outros-pets.jpg" alt="Tatuagem realista — Outros Pets" width="1440" height="1920" decoding="async" loading="lazy"></picture></div>
         <h3>Outros Pets</h3>
         <p>Cada animal possui características únicas. O projeto é desenvolvido respeitando sua anatomia, expressão e personalidade.</p>
       </article>
@@ -84,7 +440,7 @@
   <!-- A ARTISTA -->
   <section class="section bg-blush">
     <div class="artist">
-      <div class="artist__img"><img src="images/jane-artista.png" alt="Jane D'Jesus, tatuadora especialista em realismo pet" width="1170" height="1632" loading="lazy"></div>
+      <div class="artist__img"><picture><source type="image/avif" srcset="images/jane-artista-480.avif 480w, images/jane-artista-800.avif 800w" sizes="(min-width: 1024px) 480px, (min-width: 768px) 46vw, 100vw"><source type="image/webp" srcset="images/jane-artista-480.webp 480w, images/jane-artista-800.webp 800w" sizes="(min-width: 1024px) 480px, (min-width: 768px) 46vw, 100vw"><img src="images/jane-artista.jpg" alt="Jane D'Jesus, tatuadora especialista em realismo pet" width="1170" height="1632" decoding="async" loading="lazy"></picture></div>
       <div class="artist__text">
         <p class="eyebrow">A artista</p>
         <h2>Por trás de cada pet, existe uma história.</h2>
@@ -137,7 +493,7 @@
 
   <!-- MEMÓRIA -->
   <section class="memory">
-    <img src="images/memoria-jane.jpg" alt="Jane desenhando um retrato realista à mesa" width="1080" height="1920" loading="lazy">
+    <picture><source type="image/avif" srcset="images/memoria-jane-480.avif 480w, images/memoria-jane-800.avif 800w" sizes="100vw"><source type="image/webp" srcset="images/memoria-jane-480.webp 480w, images/memoria-jane-800.webp 800w" sizes="100vw"><img src="images/memoria-jane.jpg" alt="Jane desenhando um retrato realista à mesa" width="1080" height="1920" decoding="async" loading="lazy"></picture>
     <div class="veil"></div>
     <div class="memory__content">
       <h2>Algumas memórias merecem ficar para sempre.</h2>

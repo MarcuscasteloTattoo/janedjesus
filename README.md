@@ -5,10 +5,9 @@ Site estático (landing page) de [janedjesus.com.br](https://janedjesus.com.br/)
 ## Estrutura
 
 ```
-index.html        conteúdo da página
-css/style.css     estilos (cores e fontes nas variáveis do topo)
+index.html        conteúdo da página + estilos (no <style>; cores e fontes nas variáveis do topo)
 js/site.js        carrossel, FAQ, formulário → WhatsApp/Make, Meta Pixel
-images/           fotos e favicon
+images/           fotos em AVIF/WebP (480/800/1200/1440 px) + JPG de reserva e favicon
 ```
 
 ## Configuração
@@ -49,6 +48,15 @@ Campos: `lead_id`, `data_hora` (ISO, UTC), `nome`, `idade`, `nome_pet`, `whatsap
 `pixel_lead_enviado` (sim/nao), `suspeita_robo` (sim/nao), `tempo_na_pagina_s`, `fbp`, `fbc`, `pagina`, `origem`.
 
 `lead_id` é o mesmo `eventID` do Lead no Pixel — serve para deduplicar se um dia usar a API de Conversões pelo Make.
+
+## Desempenho
+
+- Imagens responsivas (`<picture>` com AVIF → WebP → JPG): o navegador baixa só o tamanho necessário.
+- CSS embutido no `index.html` e Google Fonts carregadas sem bloquear a renderização.
+- Foto principal com `preload`; 2ª e 3ª fotos do carrossel e o Pixel só carregam depois da página.
+
+Para trocar uma foto, gere as versões `-480`, `-800`, `-1200` (e `-1440` nas de tela cheia) em `.avif` e `.webp`,
+mais um `.jpg` de 800 px com o mesmo nome base.
 
 ## Publicação
 
