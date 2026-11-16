@@ -19,19 +19,29 @@ No início de `js/site.js`:
 - `PIXEL_ID`: ID do Meta Pixel
 - `PRIVACY_URL`: link da política de privacidade usado no aviso de cookies
 
-## Meta Pixel e conversões
+## Meta Pixel e conversão
 
 Pixel `1773114370684902`, carregado com o código base oficial **somente depois que o visitante aceita os cookies** (LGPD).
 
-| Momento | Evento Meta |
-|---|---|
-| Página carregada | `PageView` |
-| Começou a preencher o formulário | `Form_Start` (personalizado) |
-| **Cadastro concluído** (formulário válido enviado) | **`CompleteRegistration`** e `Lead` |
-| Abertura do WhatsApp | `Contact` |
+Eventos enviados à Meta:
 
-Na conversão, o redirecionamento para o WhatsApp espera 800 ms para o Pixel conseguir enviar o evento.
-Cada conversão leva um `eventID` único, pronto para deduplicar com a API de Conversões se ela for usada no futuro.
+| Evento | Quando |
+|---|---|
+| `PageView` | página carregada (não é conversão) |
+| **`c-lead`** | **única conversão**: cadastro válido e pessoa sendo enviada ao WhatsApp |
+
+O `c-lead` **não** dispara quando:
+- o botão é clicado com o formulário incompleto ou inválido (nome, idade 12–100, WhatsApp com DDD, tamanho);
+- o botão é clicado de novo (clique duplo ou repetido);
+- o mesmo WhatsApp já gerou `c-lead` neste navegador nos últimos 30 dias;
+- parece robô (campo-isca preenchido ou envio em menos de 4 s após abrir a página);
+- o visitante recusou os cookies.
+
+Ele é disparado imediatamente antes do redirecionamento, que espera 800 ms para o Pixel enviar o evento.
+Ajustes no topo da seção “Conversão única” em `js/site.js`: `CONVERSION_EVENT`, `DEDUP_DAYS`, `MIN_SECONDS_ON_PAGE`.
+
+**No Gerenciador de Eventos:** `c-lead` é um evento personalizado. Para otimizar campanhas por ele, crie uma
+*Conversão personalizada* baseada no evento `c-lead` (categoria Lead) e selecione-a no conjunto de anúncios.
 
 ## Publicação
 

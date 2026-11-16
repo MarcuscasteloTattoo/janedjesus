@@ -314,6 +314,7 @@ h2 {
 .lead-form select:focus,
 .lead-form textarea:focus { border-color: var(--rose-deep); }
 
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .lead-form__error { margin-top: 2rem; text-align: center; font-size: .75rem; color: var(--destructive); }
 
 .btn {

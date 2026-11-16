@@ -23,28 +23,41 @@
     if (Object.keys(found).length) { try { sessionStorage.setItem(UTM_KEY, JSON.stringify(found)); } catch {} }
   }
 
-  // ===== Rastreamento =====
-  function track(event, params = {}) {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ event, ...params, ...getUtms() });
-    trackMeta(event, params);
-  }
-  function trackMeta(event, params) {
-    if (!marketingAllowed || !pixelInitialized || !window.fbq) return;
-    if (event === "Form_Submit") return; // tratado em trackConversion()
-    if (event === "WhatsApp_Click") window.fbq("track", "Contact", params);
-    else window.fbq("trackCustom", event, params);
-  }
+  // ===== Conversão única: c-lead =====
+  // O ÚNICO evento de conversão enviado à Meta. Só dispara quando:
+  //   1. o formulário passou em todas as validações;
+  //   2. não é robô (campo-isca vazio e tempo mínimo na página);
+  //   3. esse mesmo WhatsApp ainda não gerou c-lead nos últimos 30 dias;
+  //   4. a pessoa está de fato sendo enviada ao WhatsApp (disparo imediatamente
+  //      antes do redirecionamento, uma vez só por envio).
+  // Cliques no botão com formulário incompleto/inválido NÃO disparam nada.
+  const CONVERSION_EVENT = "c-lead";
+  const SENT_KEY = "jd_clead_sent";
+  const DEDUP_DAYS = 30;
+  const MIN_SECONDS_ON_PAGE = 4;
+  const pageLoadedAt = Date.now();
 
-  // Conversão: cadastro concluído (formulário válido enviado).
-  // Dispara CompleteRegistration + Lead com o mesmo eventID (pronto para
-  // deduplicar com a API de Conversões, se for usada no futuro).
-  function trackConversion(params) {
+  function alreadyConverted(phone) {
+    try {
+      const sent = JSON.parse(localStorage.getItem(SENT_KEY) || "{}");
+      const at = sent[phone];
+      return !!at && Date.now() - at < DEDUP_DAYS * 864e5;
+    } catch { return false; }
+  }
+  function markConverted(phone) {
+    try {
+      const sent = JSON.parse(localStorage.getItem(SENT_KEY) || "{}");
+      sent[phone] = Date.now();
+      localStorage.setItem(SENT_KEY, JSON.stringify(sent));
+    } catch {}
+  }
+  // Retorna true se o c-lead foi enviado.
+  function trackLead(phone, params) {
     if (!marketingAllowed || !pixelInitialized || !window.fbq) return false;
-    const eventID = "lead-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
-    const data = { content_name: "Orçamento Realismo Pet", ...params };
-    window.fbq("track", "CompleteRegistration", { ...data, status: "completed" }, { eventID });
-    window.fbq("track", "Lead", data, { eventID: eventID + "-lead" });
+    if (alreadyConverted(phone)) return false;
+    const eventID = "clead-" + phone + "-" + Date.now();
+    window.fbq("trackCustom", CONVERSION_EVENT, { content_name: "Orçamento Realismo Pet", ...params, ...getUtms() }, { eventID });
+    markConverted(phone);
     return true;
   }
 
@@ -148,33 +161,45 @@
     const form = document.getElementById("lead-form");
     if (!form) return;
     const error = document.getElementById("form-error");
-    let started = false;
+    const btn = form.querySelector('button[type="submit"]');
+    let submitting = false;
+    const showError = text => { error.textContent = text; error.hidden = false; };
+
+    // Ao voltar do WhatsApp (botão "voltar"), libera o formulário de novo.
     window.addEventListener("pageshow", () => {
-      const btn = form.querySelector('button[type="submit"]');
+      submitting = false;
       btn.disabled = false;
       btn.textContent = "Receber meu orçamento";
     });
-    form.addEventListener("focusin", () => { if (!started) { started = true; track("Form_Start"); } });
+
     form.addEventListener("submit", e => {
       e.preventDefault();
+      if (submitting) return;                       // ignora clique duplo
       const fd = new FormData(form);
       const get = k => String(fd.get(k) || "").trim();
       const d = {
         nome: get("nome"), idade: get("idade"), nomePet: get("nomePet"), whatsapp: get("whatsapp"),
         pet: get("pet"), regiao: get("regiao"), tamanho: get("tamanho"), ideia: get("ideia"),
       };
+      const phone = d.whatsapp.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+      const idade = Number(d.idade.replace(/\D/g, ""));
+
       if (!d.nome || !d.idade || !d.whatsapp || !d.pet || !d.regiao || !d.tamanho) {
-        error.textContent = "Preencha todos os campos obrigatórios para continuar.";
-        error.hidden = false;
-        return;
+        return showError("Preencha todos os campos obrigatórios para continuar.");
       }
+      if (d.nome.replace(/[^\p{L}]/gu, "").length < 2) return showError("Informe seu nome.");
+      if (!(idade >= 12 && idade <= 100)) return showError("Informe uma idade válida.");
+      if (!/^\d{10,11}$/.test(phone)) return showError("Informe um WhatsApp válido com DDD.");
+      if (!/\d/.test(d.tamanho)) return showError("Informe o tamanho em centímetros.");
       error.hidden = true;
-      const btn = form.querySelector('button[type="submit"]');
+
+      submitting = true;
       btn.disabled = true;
       btn.textContent = "Abrindo o WhatsApp…";
-      track("Form_Submit", { pet_type: d.pet });
-      const sent = trackConversion({ pet_type: d.pet });
-      track("WhatsApp_Click", { pet_type: d.pet });
+
+      // Anti-robô: campo-isca preenchido ou envio rápido demais → sem conversão.
+      const isBot = get("website") !== "" || (Date.now() - pageLoadedAt) / 1000 < MIN_SECONDS_ON_PAGE;
+      const sent = !isBot && trackLead(phone, { pet_type: d.pet });
       const msg = [
         "Olá, Jane! Gostaria de conversar sobre uma tatuagem de Realismo Pet.",
         `Nome: ${d.nome}`,
@@ -188,14 +213,13 @@
         "Gostaria de saber mais sobre o meu projeto.",
       ].join("\n");
       const go = () => { window.location.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`; };
-      // Dá tempo do Pixel enviar a conversão antes de sair da página.
+      // Dá tempo do Pixel enviar o c-lead antes de sair da página.
       if (sent) setTimeout(go, 800); else go();
     });
   }
 
   captureUtms();
   initConsent();
-  track("Page_View");
   initHero();
   initFaq();
   initForm();
