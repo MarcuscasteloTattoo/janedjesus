@@ -28,20 +28,21 @@ Eventos enviados à Meta:
 | Evento | Quando |
 |---|---|
 | `PageView` | página carregada (não é conversão) |
-| **`c-lead`** | **única conversão**: cadastro válido e pessoa sendo enviada ao WhatsApp |
+| **`Lead`** (padrão, `content_name: c-lead`) | **única conversão**: cadastro válido e pessoa sendo enviada ao WhatsApp |
 
-O `c-lead` **não** dispara quando:
+O `Lead` **não** dispara quando:
 - o botão é clicado com o formulário incompleto ou inválido (nome, idade 12–100, WhatsApp com DDD, tamanho);
 - o botão é clicado de novo (clique duplo ou repetido);
-- o mesmo WhatsApp já gerou `c-lead` neste navegador nos últimos 30 dias;
+- o mesmo WhatsApp já gerou `Lead` neste navegador nos últimos 30 dias;
 - parece robô (campo-isca preenchido ou envio em menos de 4 s após abrir a página);
 - o visitante recusou os cookies.
 
 Ele é disparado imediatamente antes do redirecionamento, que espera 800 ms para o Pixel enviar o evento.
 Ajustes no topo da seção “Conversão única” em `js/site.js`: `CONVERSION_EVENT`, `DEDUP_DAYS`, `MIN_SECONDS_ON_PAGE`.
 
-**No Gerenciador de Eventos:** `c-lead` é um evento personalizado. Para otimizar campanhas por ele, crie uma
-*Conversão personalizada* baseada no evento `c-lead` (categoria Lead) e selecione-a no conjunto de anúncios.
+**No Gerenciador de Eventos:** `Lead` é evento padrão e já aparece como evento de conversão no conjunto.
+Para vê-lo com o nome **c-lead**, crie uma *Conversão personalizada* chamada `c-lead`, baseada no evento `Lead`
+com a regra `content_name` contém `c-lead`.
 
 ## Publicação
 

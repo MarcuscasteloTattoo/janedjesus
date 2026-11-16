@@ -23,16 +23,16 @@
     if (Object.keys(found).length) { try { sessionStorage.setItem(UTM_KEY, JSON.stringify(found)); } catch {} }
   }
 
-  // ===== Conversão única: c-lead =====
+  // ===== Conversão única: Lead (evento padrão da Meta) =====
   // O ÚNICO evento de conversão enviado à Meta. Só dispara quando:
   //   1. o formulário passou em todas as validações;
   //   2. não é robô (campo-isca vazio e tempo mínimo na página);
-  //   3. esse mesmo WhatsApp ainda não gerou c-lead nos últimos 30 dias;
+  //   3. esse mesmo WhatsApp ainda não gerou Lead nos últimos 30 dias;
   //   4. a pessoa está de fato sendo enviada ao WhatsApp (disparo imediatamente
   //      antes do redirecionamento, uma vez só por envio).
   // Cliques no botão com formulário incompleto/inválido NÃO disparam nada.
-  const CONVERSION_EVENT = "c-lead";
-  const SENT_KEY = "jd_clead_sent";
+  const CONVERSION_EVENT = "Lead";           // evento padrão da Meta
+  const SENT_KEY = "jd_lead_sent";
   const DEDUP_DAYS = 30;
   const MIN_SECONDS_ON_PAGE = 4;
   const pageLoadedAt = Date.now();
@@ -51,12 +51,12 @@
       localStorage.setItem(SENT_KEY, JSON.stringify(sent));
     } catch {}
   }
-  // Retorna true se o c-lead foi enviado.
+  // Retorna true se o Lead foi enviado.
   function trackLead(phone, params) {
     if (!marketingAllowed || !pixelInitialized || !window.fbq) return false;
     if (alreadyConverted(phone)) return false;
-    const eventID = "clead-" + phone + "-" + Date.now();
-    window.fbq("trackCustom", CONVERSION_EVENT, { content_name: "Orçamento Realismo Pet", ...params, ...getUtms() }, { eventID });
+    const eventID = "lead-" + phone + "-" + Date.now();
+    window.fbq("track", CONVERSION_EVENT, { content_name: "c-lead", ...params, ...getUtms() }, { eventID });
     markConverted(phone);
     return true;
   }
@@ -213,7 +213,7 @@
         "Gostaria de saber mais sobre o meu projeto.",
       ].join("\n");
       const go = () => { window.location.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`; };
-      // Dá tempo do Pixel enviar o c-lead antes de sair da página.
+      // Dá tempo do Pixel enviar o Lead antes de sair da página.
       if (sent) setTimeout(go, 800); else go();
     });
   }
