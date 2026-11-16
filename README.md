@@ -19,6 +19,20 @@ No início de `js/site.js`:
 - `PIXEL_ID`: ID do Meta Pixel
 - `PRIVACY_URL`: link da política de privacidade usado no aviso de cookies
 
+## Meta Pixel e conversões
+
+Pixel `1773114370684902`, carregado com o código base oficial **somente depois que o visitante aceita os cookies** (LGPD).
+
+| Momento | Evento Meta |
+|---|---|
+| Página carregada | `PageView` |
+| Começou a preencher o formulário | `Form_Start` (personalizado) |
+| **Cadastro concluído** (formulário válido enviado) | **`CompleteRegistration`** e `Lead` |
+| Abertura do WhatsApp | `Contact` |
+
+Na conversão, o redirecionamento para o WhatsApp espera 800 ms para o Pixel conseguir enviar o evento.
+Cada conversão leva um `eventID` único, pronto para deduplicar com a API de Conversões se ela for usada no futuro.
+
 ## Publicação
 
 Não tem etapa de build: basta servir a pasta como está (Cloudflare Pages, GitHub Pages, Netlify ou qualquer hospedagem estática).

@@ -31,25 +31,37 @@
   }
   function trackMeta(event, params) {
     if (!marketingAllowed || !pixelInitialized || !window.fbq) return;
-    if (event === "Form_Submit") window.fbq("track", "Lead", params);
-    else if (event === "WhatsApp_Click") window.fbq("track", "Contact", params);
+    if (event === "Form_Submit") return; // tratado em trackConversion()
+    if (event === "WhatsApp_Click") window.fbq("track", "Contact", params);
     else window.fbq("trackCustom", event, params);
   }
+
+  // Conversão: cadastro concluído (formulário válido enviado).
+  // Dispara CompleteRegistration + Lead com o mesmo eventID (pronto para
+  // deduplicar com a API de Conversões, se for usada no futuro).
+  function trackConversion(params) {
+    if (!marketingAllowed || !pixelInitialized || !window.fbq) return false;
+    const eventID = "lead-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    const data = { content_name: "Orçamento Realismo Pet", ...params };
+    window.fbq("track", "CompleteRegistration", { ...data, status: "completed" }, { eventID });
+    window.fbq("track", "Lead", data, { eventID: eventID + "-lead" });
+    return true;
+  }
+
+  // Código base oficial do Meta Pixel (só roda após o consentimento).
   function initPixel() {
     if (!marketingAllowed || pixelInitialized) return;
-    if (!window.fbq) {
-      const fbq = function (...args) { (fbq.queue = fbq.queue || []).push(args); };
-      fbq.queue = []; fbq.loaded = true; fbq.version = "2.0";
-      window.fbq = window._fbq = fbq;
-    }
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
     window.fbq("consent", "grant");
     window.fbq("init", PIXEL_ID);
-    const s = document.createElement("script");
-    s.async = true;
-    s.src = "https://connect.facebook.net/en_US/fbevents.js";
-    document.head.appendChild(s);
-    pixelInitialized = true;
     window.fbq("track", "PageView");
+    pixelInitialized = true;
   }
 
   // ===== Consentimento (LGPD/GDPR) =====
@@ -137,6 +149,11 @@
     if (!form) return;
     const error = document.getElementById("form-error");
     let started = false;
+    window.addEventListener("pageshow", () => {
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = false;
+      btn.textContent = "Receber meu orçamento";
+    });
     form.addEventListener("focusin", () => { if (!started) { started = true; track("Form_Start"); } });
     form.addEventListener("submit", e => {
       e.preventDefault();
@@ -152,7 +169,11 @@
         return;
       }
       error.hidden = true;
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = "Abrindo o WhatsApp…";
       track("Form_Submit", { pet_type: d.pet });
+      const sent = trackConversion({ pet_type: d.pet });
       track("WhatsApp_Click", { pet_type: d.pet });
       const msg = [
         "Olá, Jane! Gostaria de conversar sobre uma tatuagem de Realismo Pet.",
@@ -166,7 +187,9 @@
         `Ideia: ${d.ideia || "-"}`,
         "Gostaria de saber mais sobre o meu projeto.",
       ].join("\n");
-      window.location.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+      const go = () => { window.location.href = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`; };
+      // Dá tempo do Pixel enviar a conversão antes de sair da página.
+      if (sent) setTimeout(go, 800); else go();
     });
   }
 
