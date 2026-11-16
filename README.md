@@ -17,6 +17,7 @@ No início de `js/site.js`:
 
 - `WA_NUMBER`: número do WhatsApp que recebe os orçamentos
 - `PIXEL_ID`: ID do Meta Pixel
+- `WEBHOOK_URL`: webhook do Make que recebe as respostas do formulário
 - `PRIVACY_URL`: link da política de privacidade usado no aviso de cookies
 
 ## Meta Pixel
@@ -37,6 +38,18 @@ Desligado de propósito:
 
 O `Lead` **não** dispara com formulário vazio/inválido, clique duplo, robô (campo-isca ou envio em menos de 4 s)
 ou cookies recusados. O redirecionamento espera 800 ms para o Pixel enviar o evento.
+
+## Respostas do formulário → Make
+
+Cada cadastro válido é enviado ao webhook do Make (`WEBHOOK_URL`) antes de abrir o WhatsApp,
+por `POST` em `application/x-www-form-urlencoded` (via `sendBeacon`, que não se perde no redirecionamento).
+Vai **com ou sem** aceite de cookies; não vai para formulário inválido, clique duplo ou robô do campo-isca.
+
+Campos: `lead_id`, `data_hora` (ISO, UTC), `nome`, `idade`, `nome_pet`, `whatsapp`, `whatsapp_e164`, `tipo_pet`,
+`regiao`, `tamanho`, `ideia`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid`, `fbclid`,
+`pixel_lead_enviado` (sim/nao), `suspeita_robo` (sim/nao), `tempo_na_pagina_s`, `fbp`, `fbc`, `pagina`, `origem`.
+
+`lead_id` é o mesmo `eventID` do Lead no Pixel — serve para deduplicar se um dia usar a API de Conversões pelo Make.
 
 ## Publicação
 

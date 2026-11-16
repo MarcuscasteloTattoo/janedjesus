@@ -1,6 +1,7 @@
 (() => {
   // ===== Configuração =====
   const WA_NUMBER = "5511984558070";          // WhatsApp que recebe os orçamentos
+  const WEBHOOK_URL = "https://hook.eu2.make.com/q6a8dovmwpmw3c6mothqlayadjkuv60o"; // Make: recebe as respostas
   const PIXEL_ID = "1773114370684902";        // Meta Pixel
   const PRIVACY_URL = "/politica-de-privacidade.html";
   const CONSENT_KEY = "jd_marketing_consent";
@@ -48,16 +49,34 @@
   function markConverted() {
     try { localStorage.setItem(SENT_KEY, String(Date.now())); } catch {}
   }
-  // Retorna true se o Lead foi enviado.
+  // Retorna o eventID se o Lead foi enviado, ou "" se não foi.
   let leadSentThisPage = false;
-  function trackLead(phone, params) {
-    if (!marketingAllowed || !pixelInitialized || !window.fbq) return false;
-    if (leadSentThisPage || alreadyConverted()) return false;
+  function trackLead(eventID, params) {
+    if (!marketingAllowed || !pixelInitialized || !window.fbq) return "";
+    if (leadSentThisPage || alreadyConverted()) return "";
     leadSentThisPage = true;
-    const eventID = "lead-" + phone + "-" + Date.now();
     window.fbq("track", CONVERSION_EVENT, { content_name: "c-lead", ...params, ...getUtms() }, { eventID });
     markConverted();
-    return true;
+    return eventID;
+  }
+
+  // ===== Envio das respostas ao Make (webhook) =====
+  // Formato application/x-www-form-urlencoded: o Make separa cada campo sozinho
+  // e o navegador não precisa de CORS. sendBeacon garante o envio mesmo com a
+  // página saindo para o WhatsApp; fetch com keepalive é o plano B.
+  function readCookie(name) {
+    const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  function sendToWebhook(data) {
+    const body = new URLSearchParams();
+    Object.entries(data).forEach(([k, v]) => body.append(k, v == null ? "" : String(v)));
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon(WEBHOOK_URL, body)) return;
+    } catch {}
+    try {
+      fetch(WEBHOOK_URL, { method: "POST", body, mode: "no-cors", keepalive: true }).catch(() => {});
+    } catch {}
   }
 
   // Código base oficial do Meta Pixel (só roda após o consentimento).
@@ -212,7 +231,36 @@
 
       // Anti-robô: campo-isca preenchido ou envio rápido demais → sem conversão.
       const isBot = get("website") !== "" || (Date.now() - pageLoadedAt) / 1000 < MIN_SECONDS_ON_PAGE;
-      const sent = !isBot && trackLead(phone, { pet_type: d.pet });
+      const leadId = "lead-" + phone + "-" + Date.now();
+      const pixelLead = isBot ? "" : trackLead(leadId, { pet_type: d.pet });
+      const sent = !!pixelLead;
+
+      // Respostas → Make (robôs pegos pelo campo-isca não são enviados).
+      if (get("website") === "") {
+        const utms = getUtms();
+        sendToWebhook({
+          lead_id: leadId,
+          data_hora: new Date().toISOString(),
+          nome: d.nome,
+          idade: idade,
+          nome_pet: d.nomePet,
+          whatsapp: d.whatsapp,
+          whatsapp_e164: "+55" + phone,
+          tipo_pet: d.pet,
+          regiao: d.regiao,
+          tamanho: d.tamanho,
+          ideia: d.ideia,
+          utm_source: utms.utm_source, utm_medium: utms.utm_medium, utm_campaign: utms.utm_campaign,
+          utm_term: utms.utm_term, utm_content: utms.utm_content, gclid: utms.gclid, fbclid: utms.fbclid,
+          pixel_lead_enviado: sent ? "sim" : "nao",
+          suspeita_robo: isBot ? "sim" : "nao",
+          tempo_na_pagina_s: Math.round((Date.now() - pageLoadedAt) / 1000),
+          fbp: marketingAllowed ? readCookie("_fbp") : "",
+          fbc: marketingAllowed ? readCookie("_fbc") : "",
+          pagina: location.href.split("#")[0],
+          origem: document.referrer,
+        });
+      }
       const msg = [
         "Olá, Jane! Gostaria de conversar sobre uma tatuagem de Realismo Pet.",
         `Nome: ${d.nome}`,
