@@ -3,15 +3,10 @@
   const WA_NUMBER = "5511984558070";          // WhatsApp que recebe os orçamentos
   const WEBHOOK_URL = "https://hook.eu2.make.com/q6a8dovmwpmw3c6mothqlayadjkuv60o"; // Make: recebe as respostas
   const PIXEL_ID = "1773114370684902";        // Meta Pixel
-  const PRIVACY_URL = "/politica-de-privacidade.html";
-  const CONSENT_KEY = "jd_marketing_consent";
-  const CONSENT_VERSION = "2026-10-01";
   const UTM_KEY = "jd_utms";
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid"];
-  const CONSENT_COUNTRIES = new Set(["AT","BE","BG","BR","CH","CY","CZ","DE","DK","EE","ES","FI","FR","GB","GR","HR","HU","IE","IS","IT","LI","LT","LU","LV","MT","NL","NO","PL","PT","RO","SE","SI","SK"]);
 
   let pixelInitialized = false;
-  let marketingAllowed = false;
 
   // ===== UTMs =====
   function getUtms() {
@@ -52,7 +47,7 @@
   // Retorna o eventID se o Lead foi enviado, ou "" se não foi.
   let leadSentThisPage = false;
   function trackLead(eventID, params) {
-    if (!marketingAllowed || !pixelInitialized || !window.fbq) return "";
+    if (!pixelInitialized || !window.fbq) return "";
     if (leadSentThisPage || alreadyConverted()) return "";
     leadSentThisPage = true;
     window.fbq("track", CONVERSION_EVENT, { content_name: "c-lead", ...params, ...getUtms() }, { eventID });
@@ -79,12 +74,12 @@
     } catch {}
   }
 
-  // Código base oficial do Meta Pixel (só roda após o consentimento).
+  // Código base oficial do Meta Pixel (carrega para todos os visitantes).
   // Eventos enviados à Meta: PageView (1x por sessão) e Lead (1x por navegador a cada 30 dias).
   // Nada mais: os eventos automáticos da Meta (SubscribedButtonClick, Microdata)
   // e o PageView automático por mudança de URL ficam desligados.
   function initPixel() {
-    if (!marketingAllowed || pixelInitialized) return;
+    if (pixelInitialized) return;
     // Trava global: se o script for incluído duas vezes, o Pixel não inicia de novo.
     if (window.__jdPixelInit) { pixelInitialized = true; return; }
     window.__jdPixelInit = true;
@@ -97,7 +92,6 @@
     'https://connect.facebook.net/en_US/fbevents.js');
     window.fbq.disablePushState = true;                 // sem PageView extra por mudança de URL
     window.fbq("set", "autoConfig", false, PIXEL_ID);   // sem eventos automáticos (cliques, Microdata)
-    window.fbq("consent", "grant");
     window.fbq("init", PIXEL_ID);
     // PageView: uma vez por sessão (voltar do WhatsApp ou recarregar não duplica).
     let pvSent = false;
@@ -107,58 +101,6 @@
       try { sessionStorage.setItem(PV_KEY, "1"); } catch {}
     }
     pixelInitialized = true;
-  }
-
-  // ===== Consentimento (LGPD/GDPR) =====
-  function readConsent() {
-    try {
-      const v = JSON.parse(localStorage.getItem(CONSENT_KEY) || "null");
-      if (!v || v.noticeVersion !== CONSENT_VERSION || !["accepted", "rejected"].includes(v.choice)) return null;
-      return v;
-    } catch { return null; }
-  }
-  function applyConsent(allowed) {
-    marketingAllowed = allowed;
-    if (allowed) initPixel(); else window.fbq?.("consent", "revoke");
-  }
-  function setConsent(choice) {
-    try {
-      localStorage.setItem(CONSENT_KEY, JSON.stringify({ choice, decidedAt: new Date().toISOString(), noticeVersion: CONSENT_VERSION }));
-    } catch {}
-    applyConsent(choice === "accepted");
-    document.getElementById("cookie-consent")?.remove();
-  }
-  function showConsent() {
-    if (document.getElementById("cookie-consent")) return;
-    const el = document.createElement("aside");
-    el.id = "cookie-consent";
-    el.className = "consent";
-    el.setAttribute("aria-label", "Preferências de cookies");
-    el.innerHTML = `
-      <h2>Sua privacidade</h2>
-      <p>Com sua permissão, usamos o Pixel da Meta para medir visitas e ações, como o envio do formulário e o contato pelo WhatsApp. Você pode recusar ou mudar sua escolha a qualquer momento. Veja a nossa <a href="${PRIVACY_URL}">Política de Privacidade</a>.</p>
-      <div class="consent__actions">
-        <button type="button" data-choice="rejected">Recusar</button>
-        <button type="button" data-choice="accepted" class="consent__accept">Aceitar</button>
-      </div>`;
-    el.querySelectorAll("[data-choice]").forEach(b => b.addEventListener("click", () => setConsent(b.dataset.choice)));
-    document.body.appendChild(el);
-  }
-  async function initConsent() {
-    const existing = readConsent();
-    if (existing) { applyConsent(existing.choice === "accepted"); return; }
-    // Detecta o país via Cloudflare; se não der, pede consentimento por segurança.
-    let required = true;
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 1200);
-    try {
-      const r = await fetch("/cdn-cgi/trace", { cache: "no-store", signal: ctrl.signal });
-      if (r.ok) {
-        const loc = (await r.text()).split("\n").find(l => l.startsWith("loc="))?.slice(4).trim().toUpperCase();
-        required = !loc || loc === "XX" || loc === "T1" || CONSENT_COUNTRIES.has(loc);
-      }
-    } catch {} finally { clearTimeout(t); }
-    if (required) showConsent(); else applyConsent(true);
   }
 
   // ===== Carrossel do topo =====
@@ -255,8 +197,8 @@
           pixel_lead_enviado: sent ? "sim" : "nao",
           suspeita_robo: isBot ? "sim" : "nao",
           tempo_na_pagina_s: Math.round((Date.now() - pageLoadedAt) / 1000),
-          fbp: marketingAllowed ? readCookie("_fbp") : "",
-          fbc: marketingAllowed ? readCookie("_fbc") : "",
+          fbp: readCookie("_fbp"),
+          fbc: readCookie("_fbc"),
           pagina: location.href.split("#")[0],
           origem: document.referrer,
         });
@@ -280,9 +222,8 @@
   }
 
   captureUtms();
-  initConsent();
+  initPixel();
   initHero();
   initFaq();
   initForm();
-  document.getElementById("cookie-settings")?.addEventListener("click", showConsent);
 })();

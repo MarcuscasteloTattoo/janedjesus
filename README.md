@@ -7,7 +7,7 @@ Site estático (landing page) de [janedjesus.com.br](https://janedjesus.com.br/)
 ```
 index.html        conteúdo da página
 css/style.css     estilos (cores e fontes nas variáveis do topo)
-js/site.js        carrossel, FAQ, formulário → WhatsApp, cookies/Meta Pixel
+js/site.js        carrossel, FAQ, formulário → WhatsApp/Make, Meta Pixel
 images/           fotos e favicon
 ```
 
@@ -18,11 +18,10 @@ No início de `js/site.js`:
 - `WA_NUMBER`: número do WhatsApp que recebe os orçamentos
 - `PIXEL_ID`: ID do Meta Pixel
 - `WEBHOOK_URL`: webhook do Make que recebe as respostas do formulário
-- `PRIVACY_URL`: link da política de privacidade usado no aviso de cookies
 
 ## Meta Pixel
 
-Pixel `1773114370684902`, carregado com o código base oficial **somente depois que o visitante aceita os cookies** (LGPD).
+Pixel `1773114370684902`, carregado com o código base oficial para todos os visitantes (sem aviso de cookies).
 
 Só dois eventos chegam à Meta, cada um uma única vez:
 
@@ -34,16 +33,16 @@ Só dois eventos chegam à Meta, cada um uma única vez:
 Desligado de propósito:
 - **eventos automáticos da Meta** (`autoConfig` = false): sem `SubscribedButtonClick` em cliques e sem `Microdata`;
 - **PageView automático por mudança de URL** (`disablePushState`);
-- reinicialização do Pixel (trava global, mesmo aceitando os cookies várias vezes).
+- reinicialização do Pixel (trava global).
 
 O `Lead` **não** dispara com formulário vazio/inválido, clique duplo, robô (campo-isca ou envio em menos de 4 s)
-ou cookies recusados. O redirecionamento espera 800 ms para o Pixel enviar o evento.
+nem quando o mesmo navegador já gerou Lead. O redirecionamento espera 800 ms para o Pixel enviar o evento.
 
 ## Respostas do formulário → Make
 
 Cada cadastro válido é enviado ao webhook do Make (`WEBHOOK_URL`) antes de abrir o WhatsApp,
 por `POST` em `application/x-www-form-urlencoded` (via `sendBeacon`, que não se perde no redirecionamento).
-Vai **com ou sem** aceite de cookies; não vai para formulário inválido, clique duplo ou robô do campo-isca.
+Não vai para formulário inválido, clique duplo ou robô do campo-isca.
 
 Campos: `lead_id`, `data_hora` (ISO, UTC), `nome`, `idade`, `nome_pet`, `whatsapp`, `whatsapp_e164`, `tipo_pet`,
 `regiao`, `tamanho`, `ideia`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid`, `fbclid`,
@@ -54,6 +53,5 @@ Campos: `lead_id`, `data_hora` (ISO, UTC), `nome`, `idade`, `nome_pet`, `whatsap
 ## Publicação
 
 Não tem etapa de build: basta servir a pasta como está (Cloudflare Pages, GitHub Pages, Netlify ou qualquer hospedagem estática).
-O consentimento por país usa `/cdn-cgi/trace`, que só existe atrás da Cloudflare; fora dela, o aviso de cookies aparece para todos.
 
 > Pendente: adicionar `politica-de-privacidade.html`.
