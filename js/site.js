@@ -27,43 +27,48 @@
   // O ÚNICO evento de conversão enviado à Meta. Só dispara quando:
   //   1. o formulário passou em todas as validações;
   //   2. não é robô (campo-isca vazio e tempo mínimo na página);
-  //   3. esse mesmo WhatsApp ainda não gerou Lead nos últimos 30 dias;
+  //   3. este navegador ainda não gerou Lead nos últimos 30 dias;
   //   4. a pessoa está de fato sendo enviada ao WhatsApp (disparo imediatamente
   //      antes do redirecionamento, uma vez só por envio).
   // Cliques no botão com formulário incompleto/inválido NÃO disparam nada.
   const CONVERSION_EVENT = "Lead";           // evento padrão da Meta
-  const SENT_KEY = "jd_lead_sent";
+  const SENT_KEY = "jd_lead_sent_at";
+  const PV_KEY = "jd_pageview_sent";
   const DEDUP_DAYS = 30;
   const MIN_SECONDS_ON_PAGE = 4;
   const pageLoadedAt = Date.now();
 
-  function alreadyConverted(phone) {
+  // Um Lead por navegador a cada 30 dias, independente do número digitado.
+  function alreadyConverted() {
     try {
-      const sent = JSON.parse(localStorage.getItem(SENT_KEY) || "{}");
-      const at = sent[phone];
+      const at = Number(localStorage.getItem(SENT_KEY) || 0);
       return !!at && Date.now() - at < DEDUP_DAYS * 864e5;
     } catch { return false; }
   }
-  function markConverted(phone) {
-    try {
-      const sent = JSON.parse(localStorage.getItem(SENT_KEY) || "{}");
-      sent[phone] = Date.now();
-      localStorage.setItem(SENT_KEY, JSON.stringify(sent));
-    } catch {}
+  function markConverted() {
+    try { localStorage.setItem(SENT_KEY, String(Date.now())); } catch {}
   }
   // Retorna true se o Lead foi enviado.
+  let leadSentThisPage = false;
   function trackLead(phone, params) {
     if (!marketingAllowed || !pixelInitialized || !window.fbq) return false;
-    if (alreadyConverted(phone)) return false;
+    if (leadSentThisPage || alreadyConverted()) return false;
+    leadSentThisPage = true;
     const eventID = "lead-" + phone + "-" + Date.now();
     window.fbq("track", CONVERSION_EVENT, { content_name: "c-lead", ...params, ...getUtms() }, { eventID });
-    markConverted(phone);
+    markConverted();
     return true;
   }
 
   // Código base oficial do Meta Pixel (só roda após o consentimento).
+  // Eventos enviados à Meta: PageView (1x por sessão) e Lead (1x por navegador a cada 30 dias).
+  // Nada mais: os eventos automáticos da Meta (SubscribedButtonClick, Microdata)
+  // e o PageView automático por mudança de URL ficam desligados.
   function initPixel() {
     if (!marketingAllowed || pixelInitialized) return;
+    // Trava global: se o script for incluído duas vezes, o Pixel não inicia de novo.
+    if (window.__jdPixelInit) { pixelInitialized = true; return; }
+    window.__jdPixelInit = true;
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
     if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
@@ -71,9 +76,17 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
+    window.fbq.disablePushState = true;                 // sem PageView extra por mudança de URL
+    window.fbq("set", "autoConfig", false, PIXEL_ID);   // sem eventos automáticos (cliques, Microdata)
     window.fbq("consent", "grant");
     window.fbq("init", PIXEL_ID);
-    window.fbq("track", "PageView");
+    // PageView: uma vez por sessão (voltar do WhatsApp ou recarregar não duplica).
+    let pvSent = false;
+    try { pvSent = sessionStorage.getItem(PV_KEY) === "1"; } catch {}
+    if (!pvSent) {
+      window.fbq("track", "PageView", {}, { eventID: "pv-" + pageLoadedAt + "-" + Math.random().toString(36).slice(2, 8) });
+      try { sessionStorage.setItem(PV_KEY, "1"); } catch {}
+    }
     pixelInitialized = true;
   }
 

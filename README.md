@@ -19,30 +19,24 @@ No início de `js/site.js`:
 - `PIXEL_ID`: ID do Meta Pixel
 - `PRIVACY_URL`: link da política de privacidade usado no aviso de cookies
 
-## Meta Pixel e conversão
+## Meta Pixel
 
 Pixel `1773114370684902`, carregado com o código base oficial **somente depois que o visitante aceita os cookies** (LGPD).
 
-Eventos enviados à Meta:
+Só dois eventos chegam à Meta, cada um uma única vez:
 
-| Evento | Quando |
-|---|---|
-| `PageView` | página carregada (não é conversão) |
-| **`Lead`** (padrão, `content_name: c-lead`) | **única conversão**: cadastro válido e pessoa sendo enviada ao WhatsApp |
+| Evento | Quando | Limite |
+|---|---|---|
+| `PageView` | página aberta | 1 por sessão (recarregar ou voltar do WhatsApp não repete) |
+| `Lead` | cadastro válido, logo antes de ir ao WhatsApp | 1 por navegador a cada 30 dias |
 
-O `Lead` **não** dispara quando:
-- o botão é clicado com o formulário incompleto ou inválido (nome, idade 12–100, WhatsApp com DDD, tamanho);
-- o botão é clicado de novo (clique duplo ou repetido);
-- o mesmo WhatsApp já gerou `Lead` neste navegador nos últimos 30 dias;
-- parece robô (campo-isca preenchido ou envio em menos de 4 s após abrir a página);
-- o visitante recusou os cookies.
+Desligado de propósito:
+- **eventos automáticos da Meta** (`autoConfig` = false): sem `SubscribedButtonClick` em cliques e sem `Microdata`;
+- **PageView automático por mudança de URL** (`disablePushState`);
+- reinicialização do Pixel (trava global, mesmo aceitando os cookies várias vezes).
 
-Ele é disparado imediatamente antes do redirecionamento, que espera 800 ms para o Pixel enviar o evento.
-Ajustes no topo da seção “Conversão única” em `js/site.js`: `CONVERSION_EVENT`, `DEDUP_DAYS`, `MIN_SECONDS_ON_PAGE`.
-
-**No Gerenciador de Eventos:** `Lead` é evento padrão e já aparece como evento de conversão no conjunto.
-Para vê-lo com o nome **c-lead**, crie uma *Conversão personalizada* chamada `c-lead`, baseada no evento `Lead`
-com a regra `content_name` contém `c-lead`.
+O `Lead` **não** dispara com formulário vazio/inválido, clique duplo, robô (campo-isca ou envio em menos de 4 s)
+ou cookies recusados. O redirecionamento espera 800 ms para o Pixel enviar o evento.
 
 ## Publicação
 
