@@ -2,7 +2,7 @@
   // ===== Configuração =====
   const WA_NUMBER = "5511984558070";          // WhatsApp que recebe os orçamentos
   const WEBHOOK_URL = "https://hook.eu2.make.com/q6a8dovmwpmw3c6mothqlayadjkuv60o"; // Make: recebe as respostas
-  const PIXEL_ID = "1773114370684902";        // Meta Pixel
+  const PIXEL_ID = "2375949313193648";        // Meta Pixel
   const UTM_KEY = "jd_utms";
   const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "fbclid"];
 
@@ -28,8 +28,8 @@
   //      antes do redirecionamento, uma vez só por envio).
   // Cliques no botão com formulário incompleto/inválido NÃO disparam nada.
   const CONVERSION_EVENT = "Lead";           // evento padrão da Meta
-  const SENT_KEY = "jd_lead_sent_at";
-  const PV_KEY = "jd_pageview_sent";
+  const SENT_KEY = "jd_lead_sent_at_" + PIXEL_ID;
+  const PV_KEY = "jd_pageview_sent_" + PIXEL_ID;
   const DEDUP_DAYS = 30;
   const MIN_SECONDS_ON_PAGE = 4;
   const pageLoadedAt = Date.now();

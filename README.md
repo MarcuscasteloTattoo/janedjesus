@@ -20,7 +20,7 @@ No início de `js/site.js`:
 
 ## Meta Pixel
 
-Pixel `1773114370684902`, carregado com o código base oficial para todos os visitantes (sem aviso de cookies).
+Pixel `2375949313193648`, carregado com o código base oficial para todos os visitantes (sem aviso de cookies).
 
 Só dois eventos chegam à Meta, cada um uma única vez:
 
